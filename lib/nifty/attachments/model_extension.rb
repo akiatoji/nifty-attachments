@@ -4,7 +4,7 @@ module Nifty
 
       def self.included(base)
         base.extend ClassMethods
-        base.before_save do
+        base.after_save do
           if @pending_attachments
             @pending_attachments.each do |pa|
               old_attachments = self.nifty_attachments.where(:role => pa[:role]).pluck(:id)
@@ -17,12 +17,12 @@ module Nifty
       end
 
       module ClassMethods
-        
+
         def attachment(name)
           unless self.reflect_on_all_associations(:has_many).map(&:name).include?(:nifty_attachments)
             has_many :nifty_attachments, :as => :parent, :dependent => :destroy, :class_name => 'Nifty::Attachments::Attachment'
           end
-          
+
           has_one name, -> { select(:id, :token, :digest, :parent_id, :parent_type, :file_name, :file_type).where(:role => name) }, :class_name => 'Nifty::Attachments::Attachment', :as => :parent
 
           define_method "#{name}_file" do
@@ -39,7 +39,7 @@ module Nifty
             end
           end
         end
-        
+
       end
 
     end
